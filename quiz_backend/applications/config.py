@@ -1,3 +1,4 @@
+## quiz_backend/applications/config.py
 import os
 from datetime import timedelta
 
@@ -9,3 +10,4 @@ class Config:
     SECRET_KEY = '1234'
     JWT_SECRET_KEY = '12345678'
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=12)
+

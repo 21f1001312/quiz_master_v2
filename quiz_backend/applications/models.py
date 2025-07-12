@@ -1,59 +1,71 @@
 from datetime import datetime
-from quiz_backend import db
-
+from applications import db
 
 class User(db.Model):
-    __tablename__ = 'user'
+    __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(120), unique=True, nullable=False)  
+    username = db.Column(db.String(120), unique=True, nullable=False)  # Email
     password = db.Column(db.String(200), nullable=False)
     full_name = db.Column(db.String(120), nullable=False)
     qualification = db.Column(db.String(120), nullable=True)
     date_of_birth = db.Column(db.Date, nullable=True)
-    is_quiz_master = db.Column(db.Boolean, default=False)  
+    role = db.Column(db.String(50), nullable=False, default='student')
+    status = db.Column(db.String(50), nullable=False, default='active') 
+    is_quiz_master = db.Column(db.Boolean, default=False)
 
     subjects = db.relationship('Subject', backref='creator', lazy=True)
+    chapters = db.relationship('Chapter', backref='creator', lazy=True)
+    questions = db.relationship('Question', backref='creator', lazy=True)
+    quizzes = db.relationship('Quiz', backref='creator', lazy=True)
     scores = db.relationship('Score', backref='user', lazy=True)
 
+    def convert_to_json(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'full_name': self.full_name,
+            'is_quiz_master': self.is_quiz_master,
+            'role': self.role,
+            'status': self.status
+        }
 
 class Subject(db.Model):
-    __tablename__ = 'subject'
+    __tablename__ = 'subjects'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False, unique=True)
     description = db.Column(db.Text)
-    status = db.Column(db.String(20), default='active')  
-    level = db.Column(db.String(50))  
+    status = db.Column(db.String(20), default='active')
+    level = db.Column(db.String(50))
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     chapters = db.relationship('Chapter', backref='subject', lazy=True)
 
-
 class Chapter(db.Model):
-    __tablename__ = 'chapter'
+    __tablename__ = 'chapters'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text)
-    subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
+    subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'), nullable=False)
 
     quizzes = db.relationship('Quiz', backref='chapter', lazy=True)
 
-
 class Quiz(db.Model):
-    __tablename__ = 'quiz'
+    __tablename__ = 'quizzes'
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
-    chapter_id = db.Column(db.Integer, db.ForeignKey('chapter.id'), nullable=False)
+    chapter_id = db.Column(db.Integer, db.ForeignKey('chapters.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Creator of quiz
 
     date_of_quiz = db.Column(db.Date, nullable=False)
-    time_duration = db.Column(db.Time, nullable=True) 
+    time_duration = db.Column(db.Time, nullable=True)
     duration_minutes = db.Column(db.Integer, default=10)
 
     remarks = db.Column(db.Text)
-    status = db.Column(db.String(20), default='scheduled')  
+    status = db.Column(db.String(20), default='scheduled')
 
     start_time = db.Column(db.DateTime)
     end_time = db.Column(db.DateTime)
@@ -61,29 +73,26 @@ class Quiz(db.Model):
     questions = db.relationship('Question', backref='quiz', lazy=True)
     scores = db.relationship('Score', backref='quiz', lazy=True)
 
-
 class Question(db.Model):
-    __tablename__ = 'question'
+    __tablename__ = 'questions'
 
     id = db.Column(db.Integer, primary_key=True)
-    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
+    quiz_id = db.Column(db.Integer, db.ForeignKey('quizzes.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     question_statement = db.Column(db.String(500), nullable=False)
     option1 = db.Column(db.String(200), nullable=False)
     option2 = db.Column(db.String(200), nullable=False)
     option3 = db.Column(db.String(200), nullable=False)
     option4 = db.Column(db.String(200), nullable=False)
-    correct_option = db.Column(db.String(1), nullable=False)  
-
+    correct_option = db.Column(db.String(1), nullable=False)
 
 class Score(db.Model):
-    __tablename__ = 'score'
+    __tablename__ = 'scores'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    quiz_id = db.Column(db.Integer, db.ForeignKey('quizzes.id'), nullable=False)
 
     total_scored = db.Column(db.Integer)
     time_stamp_of_attempt = db.Column(db.DateTime, default=datetime.utcnow)
-
-    
