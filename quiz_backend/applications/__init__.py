@@ -23,6 +23,8 @@ from applications.models import User
 from applications.authenticate_api import SignupAPI, AuthAPI, StudentAPI
 from applications.subject_api import SubjectAPI
 from applications.chapter_api import ChapterAPI
+from applications.quiz_api import QuizAPI
+from applications.start_quiz_api import StartQuizAPI
 
 
 with app.app_context():
@@ -53,3 +55,5 @@ api.add_resource(AuthAPI, '/api/login', '/api/approve/<int:user_id>', '/api/dele
 api.add_resource(StudentAPI, '/api/students')
 api.add_resource(SubjectAPI, '/api/subject','/api/subject/<int:subject_id>')
 api.add_resource(ChapterAPI, '/api/chapter', '/api/chapter/subject/<int:subject_id>', '/api/chapter/<int:chapter_id>')
+api.add_resource(QuizAPI, '/api/quiz', '/api/quiz/<int:quiz_id>')
+api.add_resource(StartQuizAPI, '/api/quiz/<int:quiz_id>/start')
