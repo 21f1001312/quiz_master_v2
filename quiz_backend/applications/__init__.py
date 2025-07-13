@@ -21,6 +21,8 @@ app.app_context().push()
 
 from applications.models import User
 from applications.authenticate_api import SignupAPI, AuthAPI, StudentAPI
+from applications.subject_api import SubjectAPI
+from applications.chapter_api import ChapterAPI
 
 
 with app.app_context():
@@ -49,3 +51,5 @@ with app.app_context():
 api.add_resource(SignupAPI, '/api/signup')
 api.add_resource(AuthAPI, '/api/login', '/api/approve/<int:user_id>', '/api/delete/<int:user_id>')
 api.add_resource(StudentAPI, '/api/students')
+api.add_resource(SubjectAPI, '/api/subject','/api/subject/<int:subject_id>')
+api.add_resource(ChapterAPI, '/api/chapter', '/api/chapter/subject/<int:subject_id>', '/api/chapter/<int:chapter_id>')
