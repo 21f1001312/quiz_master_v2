@@ -1,48 +1,51 @@
-## quiz_backend/applications/__init__.py
+# quiz_backend/applications/__init__.py
 from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 import os
+from datetime import date
 
 from applications.config import Config
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+db = SQLAlchemy(app)
+api = Api(app)
+jwt = JWTManager(app)
+CORS(app)
+
+app.app_context().push()
+
 from applications.models import User
-from applications.authenticate_api import AuthAPI, StudentAPI
+from applications.authenticate_api import SignupAPI, AuthAPI, StudentAPI
 
-db = SQLAlchemy()
-jwt = JWTManager()
 
-def create_app():
-    app = Flask(__name__)
-    app.config.from_object(Config)
+with app.app_context():
+    db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace("sqlite:///", "")
 
-    db.init_app(app)
-    jwt.init_app(app)
-    CORS(app)
-
-    api = Api(app)
-    api.add_resource(AuthAPI, '/api/login', '/api/approve/<int:user_id>', '/api/delete/<int:user_id>')
-    api.add_resource(StudentAPI, '/api/students')
-
-    app.app_context().push()
-
-    db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'database.sqlite3')
     if not os.path.exists(db_path):
         db.create_all()
-        print("📦 Database created.")
+        print(" Database created.")
 
-    quiz_master = User.query.filter_by(username='admin@gmail.com').first()
-    if not quiz_master:
-        quiz_master = User(
-            username='admin@gmail.com',
-            password='admin123',
-            full_name='Quiz Master',
-            qualification='Master of Quizzes',
-            is_quiz_master=True
-        )
-        db.session.add(quiz_master)
-        db.session.commit()
-        print("✅ Default quiz master created.")
+        admin = User.query.filter_by(username='admin@gmail.com').first()
+        if not admin:
+            admin = User(
+                username='admin@gmail.com',
+                password='admin123',
+                full_name='Quiz Master',
+                qualification='M.Sc. Computer Science',
+                date_of_birth=date(1990, 1, 1),  
+                role='quiz_master',
+                status='approved'
+            )
+            db.session.add(admin)
+            db.session.commit()
+            print(" Quiz Master added.")
 
-    return app
+
+api.add_resource(SignupAPI, '/api/signup')
+api.add_resource(AuthAPI, '/api/login', '/api/approve/<int:user_id>', '/api/delete/<int:user_id>')
+api.add_resource(StudentAPI, '/api/students')

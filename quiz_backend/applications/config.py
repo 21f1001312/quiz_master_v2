@@ -2,7 +2,7 @@
 import os
 from datetime import timedelta
 
-base_dir = os.path.abspath(os.path.dirname(__file__))
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 class Config:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(base_dir, 'database.sqlite3')

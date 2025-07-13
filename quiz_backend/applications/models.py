@@ -12,20 +12,21 @@ class User(db.Model):
     date_of_birth = db.Column(db.Date, nullable=True)
     role = db.Column(db.String(50), nullable=False, default='student')
     status = db.Column(db.String(50), nullable=False, default='active') 
-    is_quiz_master = db.Column(db.Boolean, default=False)
 
     subjects = db.relationship('Subject', backref='creator', lazy=True)
     chapters = db.relationship('Chapter', backref='creator', lazy=True)
-    questions = db.relationship('Question', backref='creator', lazy=True)
     quizzes = db.relationship('Quiz', backref='creator', lazy=True)
+    questions = db.relationship('Question', backref='creator', lazy=True)
     scores = db.relationship('Score', backref='user', lazy=True)
 
     def convert_to_json(self):
         return {
             'id': self.id,
             'username': self.username,
+            'password': self.password,
             'full_name': self.full_name,
-            'is_quiz_master': self.is_quiz_master,
+            'qualification': self.qualification,
+            'date_of_birth': self.date_of_birth.strftime('%Y-%m-%d') if self.date_of_birth else None,
             'role': self.role,
             'status': self.status
         }
@@ -39,7 +40,7 @@ class Subject(db.Model):
     status = db.Column(db.String(20), default='active')
     level = db.Column(db.String(50))
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Creator (quiz master)
     chapters = db.relationship('Chapter', backref='subject', lazy=True)
 
 class Chapter(db.Model):
@@ -48,7 +49,9 @@ class Chapter(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text)
+
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Creator (quiz master)
 
     quizzes = db.relationship('Quiz', backref='chapter', lazy=True)
 
@@ -57,8 +60,9 @@ class Quiz(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
+
     chapter_id = db.Column(db.Integer, db.ForeignKey('chapters.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Creator of quiz
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Creator (quiz master)
 
     date_of_quiz = db.Column(db.Date, nullable=False)
     time_duration = db.Column(db.Time, nullable=True)
@@ -78,7 +82,7 @@ class Question(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     quiz_id = db.Column(db.Integer, db.ForeignKey('quizzes.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Creator (quiz master)
 
     question_statement = db.Column(db.String(500), nullable=False)
     option1 = db.Column(db.String(200), nullable=False)

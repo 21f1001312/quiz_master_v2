@@ -5,7 +5,7 @@ from flask_restful import Resource
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity, get_jwt
 from flask_jwt_extended import jwt_required
-from applications.models import db, Users
+from applications.models import db, User
 
 class AuthAPI(Resource):
     def post(self):
@@ -13,7 +13,7 @@ class AuthAPI(Resource):
         if not data.get('email') or not data.get('password'):
             return {'message': 'Both email and password are required.'}, 400
 
-        user = Users.query.filter_by(username=data.get('email')).first()
+        user = User.query.filter_by(username=data.get('email')).first()
         if user:
             if user.password == data.get('password'):
                 token = create_access_token(
@@ -35,7 +35,7 @@ class AuthAPI(Resource):
         if current_user.get('role') != 'quiz_master':
             return {'message': 'Access Denied'}, 403
 
-        user = Users.query.filter_by(id=user_id).first()
+        user = User.query.filter_by(id=user_id).first()
         if not user:
             return {'message': 'User not found.'}, 404
 
@@ -46,10 +46,10 @@ class AuthAPI(Resource):
     @jwt_required()
     def delete(self, user_id):
         current_user = get_jwt()
-        if current_user.get('role') != 'quiz_master':
+        if current_user.get('role') != 'admin':
             return {'message': 'Access Denied'}, 403
 
-        user = Users.query.filter_by(id=user_id).first()
+        user = User.query.filter_by(id=user_id).first()
         if not user:
             return {'message': 'User not found.'}, 404
 
@@ -68,6 +68,45 @@ class StudentAPI(Resource):
         if current_user.get('role') != 'quiz_master':
             return {'message': 'Access Denied'}, 403
 
-        students = Users.query.filter_by(is_quiz_master=False).all()
+        students = User.query.filter_by(is_quiz_master=False).all()
         data = [student.convert_to_json() for student in students]
         return {'students': data}, 200
+    
+class SignupAPI(Resource):
+    def post(self):
+        data = request.get_json()
+
+        # Basic field validation
+        if not data.get('username') or not data.get('password') or not data.get('full_name'):
+            return {'message': 'Username (email), password, and full name are required.'}, 400
+
+        if len(data['full_name'].strip()) < 4 or len(data['full_name'].strip()) > 100:
+            return {'message': 'Full name must be between 4 and 100 characters.'}, 400
+
+        if len(data['username'].strip()) > 120 or "@" not in data['username']:
+            return {'message': 'Username must be a valid email with less than 121 characters.'}, 400
+
+        if len(data['password'].strip()) < 4 or len(data['password'].strip()) > 20:
+            return {'message': 'Password must be between 4 and 20 characters.'}, 400
+
+        # Role must only be student for signup
+        if data.get('role', '').strip().lower() != 'student':
+            return {'message': 'Only students can sign up. Quiz masters are created by admin.'}, 403
+
+        existing_user = User.query.filter_by(username=data['username'].strip()).first()
+        if existing_user:
+            return {'message': 'User already exists with this email.'}, 400
+
+        new_student = User(
+            username=data['username'].strip(),
+            password=data['password'].strip(),
+            full_name=data['full_name'].strip(),
+            role='student',
+            status='pending',  
+            is_quiz_master=False
+        )
+
+        db.session.add(new_student)
+        db.session.commit()
+
+        return {'message': 'Student account created. Awaiting approval by Quiz Master.'}, 201
