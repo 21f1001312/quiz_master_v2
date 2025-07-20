@@ -36,7 +36,15 @@ class SubjectAPI(Resource):
         db.session.add(new_subject)
         db.session.commit()
 
-        return {'message': 'Subject created successfully.'}, 200
+        return {'message': 'Subject created successfully.'}, 201
+    
+class SubjectByIdAPI(Resource):
+    @jwt_required()
+    def get(self, subject_id):
+        subject = Subject.query.get(subject_id)
+        if not subject:
+            return {'message': 'Subject not found.'}, 404
+        return subject.convert_to_json(), 200
     
     @jwt_required()
     def put(self, subject_id):

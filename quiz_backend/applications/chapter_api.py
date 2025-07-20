@@ -51,8 +51,17 @@ class ChapterAPI(Resource):
 
         db.session.add(new_chapter)
         db.session.commit()
-        return {'message': 'Chapter created successfully.'}, 200
+        return {'message': 'Chapter created successfully.'}, 201
     
+
+class ChapterByIdAPI(Resource):
+    @jwt_required()
+    def get(self, chapter_id):
+        chapter = Chapter.query.get(chapter_id)
+        if not chapter:
+            return {'message': 'Chapter not found.'}, 404
+        return chapter.convert_to_json(), 200
+
     @jwt_required()
     def put(self, chapter_id):
         current_user = get_jwt()

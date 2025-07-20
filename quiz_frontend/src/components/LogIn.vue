@@ -67,13 +67,13 @@ export default {
           // Role-based redirection
           const role = result.user_role;
           if (role === 'quiz_master') {
-            alert("Master login successful");
+            alert("Admin login successful");
             localStorage.setItem("adminToken", result.token);
-            this.$router.push("/QmDash");
+            this.$router.push("/quizmaster");
           } else if (role === 'student') {
             alert("Student login successful");
-            localStorage.setItem("customerToken", result.token);
-            this.$router.push("/StudentDash");
+            localStorage.setItem("studentToken", result.token);
+            this.$router.push("/student");
           } else {
             alert("Unknown role, unable to redirect.");
           }
@@ -84,4 +84,5 @@ export default {
     },
   },
 };
+
 </script>

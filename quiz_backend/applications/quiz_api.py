@@ -7,22 +7,19 @@ from datetime import datetime
 
 class QuizAPI(Resource):
     @jwt_required()
-    def get(self, quiz_id=None, chapter_id=None):
-        if quiz_id:
-            quiz = Quiz.query.get(quiz_id)
-            if not quiz:
-                return {'message': 'Quiz not found.'}, 404
-            return quiz.convert_to_json(), 200
+    def get(self):
+        chapter_id = request.args.get('chapter_id', type=int)
         
-        if chapter_id:
+        if chapter_id is not None:
             quizzes = Quiz.query.filter_by(chapter_id=chapter_id).all()
             if not quizzes:
                 return {'message': f'No quizzes found for chapter ID {chapter_id}'}, 404
             return {'quizzes': [quiz.convert_to_json() for quiz in quizzes]}, 200
 
-        # default: return all quizzes
+        # Default: return all quizzes
         quizzes = Quiz.query.all()
         return {'quizzes': [quiz.convert_to_json() for quiz in quizzes]}, 200
+
     
     
     from datetime import datetime
@@ -59,7 +56,7 @@ class QuizAPI(Resource):
         except ValueError:
             return {'message': 'Invalid date or time format. Use YYYY-MM-DD and HH:MM:SS.'}, 400
 
-        user_id = get_jwt_identity()
+        current_user_id = get_jwt_identity()
 
         # Create quiz instance
         new_quiz = Quiz(
@@ -70,13 +67,21 @@ class QuizAPI(Resource):
             remarks=data.get('remarks', '').strip(),
             subject_id=chapter.subject_id,
             chapter_id=chapter.id,
-            master_id=user_id
+            master_id=current_user_id
         )
 
         db.session.add(new_quiz)
         db.session.commit()
 
-        return {'message': 'Quiz created successfully.'}, 200
+        return {'message': 'Quiz created successfully.'}, 201
+    
+class QuizByIdAPI(Resource):
+    @jwt_required()
+    def get(self, quiz_id):
+        quiz = Quiz.query.get(quiz_id)
+        if not quiz:
+            return {'message': 'Quiz not found.'}, 404
+        return quiz.convert_to_json(), 200
 
     @jwt_required()
     def put(self, quiz_id):

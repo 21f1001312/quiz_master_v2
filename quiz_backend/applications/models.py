@@ -1,4 +1,4 @@
-## quiz_backend/applications/models.py
+## applications/models.py
 from datetime import datetime
 from applications import db
 
@@ -14,14 +14,8 @@ class User(db.Model):
     role = db.Column(db.String(50), nullable=False, default='student')
     status = db.Column(db.String(50), nullable=False, default='active') 
 
-    # for quiz master
-    # subjects = db.relationship('Subject', backref='creator', lazy=True, foreign_keys='Subject.master_id')
-    # chapters = db.relationship('Chapter', backref='creator', lazy=True, foreign_keys='Chapter.master_id')
-    # quizzes_created = db.relationship('Quiz', backref='creator', lazy=True, foreign_keys='Quiz.master_id')
-    questionns = db.relationship('Question', backref='user', lazy=True)
-    
-    # for student
-    scores = db.relationship('Score', backref='user', lazy=True)
+    questionns = db.relationship('Question', backref='user', lazy=True, cascade="all, delete")
+    scores = db.relationship('Score', backref='user', lazy=True, cascade="all, delete")
 
     def convert_to_json(self):
         return {
@@ -43,10 +37,11 @@ class Subject(db.Model):
     description = db.Column(db.Text)
     level = db.Column(db.String(50))
 
-    chapters = db.relationship('Chapter', backref='subject', lazy=True)
+    chapters = db.relationship('Chapter', backref='subject', lazy=True, cascade="all, delete")
+    quizzes = db.relationship('Quiz', backref='subject', lazy=True, cascade="all, delete")
 
     def convert_to_json(self):
-        return{
+        return {
             "id": self.id,
             "name": self.name,
             "description": self.description,
@@ -62,7 +57,7 @@ class Chapter(db.Model):
 
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'), nullable=False)  
 
-    quizzes = db.relationship('Quiz', backref='chapter', lazy=True)
+    quizzes = db.relationship('Quiz', backref='chapter', lazy=True, cascade="all, delete")
 
     def convert_to_json(self):
         return {
@@ -93,8 +88,23 @@ class Quiz(db.Model):
     chapter_id = db.Column(db.Integer, db.ForeignKey('chapters.id'), nullable=False)
     master_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
-    questions = db.relationship('Question', backref='quiz', lazy=True)
-    scores = db.relationship('Score', backref='quiz', lazy=True)
+    questions = db.relationship('Question', backref='quiz', lazy=True, cascade="all, delete")
+    scores = db.relationship('Score', backref='quiz', lazy=True, cascade="all, delete")
+
+    def convert_to_json(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "date_of_quiz": self.date_of_quiz.strftime('%Y-%m-%d') if self.date_of_quiz else None,
+            "time_duration": str(self.time_duration) if self.time_duration else None,
+            "duration_minutes": self.duration_minutes,
+            "remarks": self.remarks,
+            "status": self.status,
+            "start_time": self.start_time.strftime('%Y-%m-%d %H:%M:%S') if self.start_time else None,
+            "end_time": self.end_time.strftime('%Y-%m-%d %H:%M:%S') if self.end_time else None,
+            "subject_name": self.subject.name,
+            "chapter_name": self.chapter.name
+        }
 
 class Question(db.Model):
     __tablename__ = 'questions'
@@ -111,6 +121,19 @@ class Question(db.Model):
     quiz_id = db.Column(db.Integer, db.ForeignKey('quizzes.id'), nullable=False)
     master_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False) 
 
+    def convert_to_json(self):
+        return {
+            "id": self.id,
+            "question_statement": self.question_statement,
+            "option1": self.option1,
+            "option2": self.option2,
+            "option3": self.option3,
+            "option4": self.option4,
+            "correct_option": self.correct_option,
+            "quiz_id": self.quiz_id,
+            "master_id": self.master_id
+        }
+
 class Score(db.Model):
     __tablename__ = 'scores'
 
@@ -121,4 +144,11 @@ class Score(db.Model):
     total_scored = db.Column(db.Integer)
     time_stamp_of_attempt = db.Column(db.DateTime, default=datetime.utcnow)
 
-
+    def convert_to_json(self):
+        return {
+            "id": self.id,
+            "student_id": self.student_id,
+            "quiz_id": self.quiz_id,
+            "total_scored": self.total_scored,
+            "time_stamp_of_attempt": self.time_stamp_of_attempt.strftime('%Y-%m-%d %H:%M:%S') if self.time_stamp_of_attempt else None
+        }

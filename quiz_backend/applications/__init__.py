@@ -21,9 +21,10 @@ app.app_context().push()
 
 from applications.models import User
 from applications.authenticate_api import SignupAPI, AuthAPI, StudentAPI
-from applications.subject_api import SubjectAPI
-from applications.chapter_api import ChapterAPI
-from applications.quiz_api import QuizAPI
+from applications.subject_api import SubjectAPI, SubjectByIdAPI
+from applications.chapter_api import ChapterAPI, ChapterByIdAPI
+from applications.quiz_api import QuizAPI, QuizByIdAPI
+from applications.question_api import QuestionAPI, QuestionByIdAPI
 from applications.start_quiz_api import StartQuizAPI
 
 
@@ -53,7 +54,12 @@ with app.app_context():
 api.add_resource(SignupAPI, '/api/signup')
 api.add_resource(AuthAPI, '/api/login', '/api/approve/<int:user_id>', '/api/delete/<int:user_id>')
 api.add_resource(StudentAPI, '/api/students')
-api.add_resource(SubjectAPI, '/api/subject','/api/subject/<int:subject_id>')
-api.add_resource(ChapterAPI, '/api/chapter', '/api/chapter/subject/<int:subject_id>', '/api/chapter/<int:chapter_id>')
-api.add_resource(QuizAPI, '/api/quiz', '/api/quiz/<int:quiz_id>')
+api.add_resource(SubjectAPI, '/api/subjects')
+api.add_resource(SubjectByIdAPI, '/api/subjects/<int:subject_id>')
+api.add_resource(ChapterAPI, '/api/chapter', '/api/chapter/subject/<int:subject_id>')
+api.add_resource(ChapterByIdAPI, '/api/chapter/<int:chapter_id>')
+api.add_resource(QuizAPI, '/api/quiz')
+api.add_resource(QuizByIdAPI, '/api/quiz/<int:quiz_id>')
+api.add_resource(QuestionAPI, '/api/question')
+api.add_resource(QuestionByIdAPI, '/api/question/<int:question_id>')
 api.add_resource(StartQuizAPI, '/api/quiz/<int:quiz_id>/start')

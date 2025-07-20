@@ -35,7 +35,6 @@
 
               <div v-if="message" class="alert alert-success mt-2">{{ message }}</div>
               <div v-if="errorMessage" class="alert alert-danger mt-2">{{ errorMessage }}</div>
-
               <button type="submit" class="btn btn-success w-100">Sign Up</button>
             </form>
           </div>
@@ -89,11 +88,15 @@ export default {
         }
 
         this.message = data.message;
+        alert(this.message);
+        
         this.username = '';
         this.password = '';
         this.full_name = '';
         this.qualification = '';
         this.date_of_birth = '';
+
+        this.$router.push('/login');
       } catch (err) {
         this.errorMessage = 'Signup failed. Server error.';
       }
