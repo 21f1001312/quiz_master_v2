@@ -28,12 +28,6 @@
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label for="subjectID" class="form-label">Subject Id</label>
-                                <input type="text" class="form-control" id="subjectID" v-model="newChapter.subject_id"
-                                    required />
-                            </div>
-
-                            <div class="mb-3">
                                 <label for="chapterDescription" class="form-label">Description</label>
                                 <input type="text" class="form-control" id="chapterDescription"
                                     v-model="newChapter.description" required />

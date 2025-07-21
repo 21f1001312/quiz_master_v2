@@ -1,20 +1,20 @@
 // StudentDash.vue
 <template>
-  <div class="container mt-5">
-    <h2>Student Dashboard</h2>
-    <p>Welcome, Student!</p>
-  </div>
+  <nav class="navbar bg-primary" data-bs-theme="dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Admin Dashboard</a>
+            <button class="btn btn-outline-light ms-auto" @click="logout">Logout</button>
+        </div>
+    </nav>
 </template>
 
 <script>
 export default {
-  name: 'QmDash',
-  mounted() {
-    const role = localStorage.getItem('userRole');
-    if (role !== 'Student') {
-      alert('Access denied: Student only');
-      this.$router.push('/login');
-    }
-  },
+  methods: {
+        async logout() {
+            localStorage.removeItem('studentToken');
+            this.$router.push('/');
+        },
+      },
 };
 </script>

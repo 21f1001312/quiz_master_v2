@@ -61,6 +61,7 @@ export default {
         } else {
           alert("Login Successful");
           localStorage.setItem("adminToken", result.token);
+          localStorage.setItem("studentToken", result.token);
           localStorage.setItem("userRole", result.user_role);
           localStorage.setItem("userName", result.User_name);
 
