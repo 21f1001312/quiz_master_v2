@@ -96,12 +96,11 @@ class Quiz(db.Model):
             "id": self.id,
             "title": self.title,
             "date_of_quiz": self.date_of_quiz.strftime('%Y-%m-%d') if self.date_of_quiz else None,
-            "time_duration": str(self.time_duration) if self.time_duration else None,
             "duration_minutes": self.duration_minutes,
             "remarks": self.remarks,
             "status": self.status,
-            "start_time": self.start_time.strftime('%Y-%m-%d %H:%M:%S') if self.start_time else None,
-            "end_time": self.end_time.strftime('%Y-%m-%d %H:%M:%S') if self.end_time else None,
+            "start_time": self.start_time.strftime('%Y-%m-%d %H:%M') if self.start_time else None,
+            "end_time": self.end_time.strftime('%Y-%m-%d %H:%M') if self.end_time else None,
             "subject_name": self.subject.name,
             "chapter_name": self.chapter.name
         }

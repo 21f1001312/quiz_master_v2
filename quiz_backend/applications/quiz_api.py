@@ -2,8 +2,7 @@ from flask import request
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from applications.models import db, Quiz, Chapter, Subject
-from datetime import datetime
-
+from datetime import datetime, date, time
 
 class QuizAPI(Resource):
     @jwt_required()
@@ -37,8 +36,8 @@ class QuizAPI(Resource):
             return {'message': 'Title is required.'}, 400
         if not data.get('date_of_quiz'):
             return {'message': 'Date of quiz is required.'}, 400
-        if not data.get('time_duration'):
-            return {'message': 'Time duration is required.'}, 400
+        if not data.get('start_time'):
+            return {'message': 'Start time is required.'}, 400
         if not data.get('duration_minutes'):
             return {'message': 'Duration (in minutes) is required.'}, 400
         if not data.get('chapter_id'):
@@ -52,7 +51,7 @@ class QuizAPI(Resource):
         # Convert date and time fields
         try:
             date_of_quiz = datetime.strptime(data['date_of_quiz'], '%Y-%m-%d').date()
-            time_duration = datetime.strptime(data['time_duration'], '%H:%M:%S').time()
+            start_time = datetime.strptime(data['start_time'], '%H:%M').time()
         except ValueError:
             return {'message': 'Invalid date or time format. Use YYYY-MM-DD and HH:MM:SS.'}, 400
 
@@ -62,9 +61,8 @@ class QuizAPI(Resource):
         new_quiz = Quiz(
             title=data['title'].strip(),
             date_of_quiz=date_of_quiz,
-            time_duration=time_duration,
+            start_time=start_time,
             duration_minutes=data['duration_minutes'],
-            remarks=data.get('remarks', '').strip(),
             subject_id=chapter.subject_id,
             chapter_id=chapter.id,
             master_id=current_user_id
@@ -90,20 +88,23 @@ class QuizByIdAPI(Resource):
         if not quiz:
             return {'message': 'Quiz not found.'}, 404
 
-        if 'title' in data:
+        if 'title' in data and data['title'].strip():
             quiz.title = data['title'].strip()
 
-        if 'date_of_quiz' in data:
-            quiz.date_of_quiz = data['date_of_quiz']
+        if 'date_of_quiz' in data and data['date_of_quiz'].strip():
+            try:
+                quiz.date_of_quiz = datetime.strptime(data['date_of_quiz'], '%Y-%m-%d').date()
+            except ValueError:
+                return {'message': 'Invalid date format. Use YYYY-MM-DD.'}, 400
 
-        if 'time_duration' in data:
-            quiz.time_duration = data['time_duration']
+        if 'start_time' in data and data['start_time'].strip():
+            try:
+                quiz.start_time = datetime.strptime(data['start_time'], '%H:%M').time()
+            except ValueError:
+                return {'message': 'Invalid time format. Use HH:MM.'}, 400
 
-        if 'duration_minutes' in data:
+        if 'duration_minutes' in data and data['duration_minutes'] is not None:
             quiz.duration_minutes = data['duration_minutes']
-
-        if 'remarks' in data:
-            quiz.remarks = data['remarks'].strip()
 
         db.session.commit()
         return {'message': 'Quiz updated successfully.'}, 200
@@ -117,3 +118,24 @@ class QuizByIdAPI(Resource):
         db.session.delete(quiz)
         db.session.commit()
         return {'message': 'Quiz deleted successfully.'}, 200
+    
+
+class QuizFeedbackAPI(Resource):
+    @jwt_required()
+    def post(self, quiz_id):
+        jwt_payload = get_jwt()
+        if jwt_payload.get('role') != 'student':
+            return {'message': 'Access denied. Only students can provide feedback.'}, 403
+
+        quiz = Quiz.query.get(quiz_id)
+        if not quiz:
+            return {'message': 'Quiz not found.'}, 404
+
+        data = request.get_json()
+        if not data.get('remarks'):
+            return {'message': 'Remarks are required.'}, 400
+
+        quiz.remarks = data['remarks'].strip()
+        db.session.commit()
+
+        return {'message': 'Thank you for your feedback!'}, 200

@@ -23,7 +23,7 @@ from applications.models import User
 from applications.authenticate_api import SignupAPI, AuthAPI, StudentAPI
 from applications.subject_api import SubjectAPI, SubjectByIdAPI
 from applications.chapter_api import ChapterAPI, ChapterByIdAPI
-from applications.quiz_api import QuizAPI, QuizByIdAPI
+from applications.quiz_api import QuizAPI, QuizByIdAPI, QuizFeedbackAPI
 from applications.question_api import QuestionAPI, QuestionByIdAPI
 from applications.start_quiz_api import StartQuizAPI
 
@@ -60,6 +60,7 @@ api.add_resource(ChapterAPI, '/api/chapter', '/api/chapter/subject/<int:subject_
 api.add_resource(ChapterByIdAPI, '/api/chapter/<int:chapter_id>')
 api.add_resource(QuizAPI, '/api/quiz')
 api.add_resource(QuizByIdAPI, '/api/quiz/<int:quiz_id>')
+api.add_resource(QuizFeedbackAPI, '/api/quiz/<int:quiz_id>/feedback')
 api.add_resource(QuestionAPI, '/api/question')
 api.add_resource(QuestionByIdAPI, '/api/question/<int:question_id>')
 api.add_resource(StartQuizAPI, '/api/quiz/<int:quiz_id>/start')

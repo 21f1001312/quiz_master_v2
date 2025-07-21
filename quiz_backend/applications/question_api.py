@@ -65,16 +65,40 @@ class QuestionByIdAPI(Resource):
         return question.convert_to_json(), 200
     
     @jwt_required()
-    def patch(self, question_id):
+    def put(self, question_id):
         current_user = get_jwt_identity()
         data = request.get_json()
         question = Question.query.get(question_id)
         if not question:
             return {'message': 'Question not found.'}, 404
-        for key, value in data.items():
-            setattr(question, key, value)
+
+        if 'question_statement' in data and data['question_statement'].strip():
+            question.question_statement = data['question_statement'].strip()
+
+        if 'option1' in data and data['option1'].strip():
+            question.option1 = data['option1'].strip()
+
+        if 'option2' in data and data['option2'].strip():
+            question.option2 = data['option2'].strip()
+
+        if 'option3' in data and data['option3'].strip():
+            question.option3 = data['option3'].strip()
+
+        if 'option4' in data and data['option4'].strip():
+            question.option4 = data['option4'].strip()
+
+        if 'correct_option' in data and data['correct_option'].strip():
+            question.correct_option = data['correct_option'].strip()
+
+        if 'quiz_id' in data:
+            question.quiz_id = data['quiz_id']
+
+        if 'master_id' in data:
+            question.master_id = data['master_id']
+
         db.session.commit()
         return {'message': 'Question updated successfully.'}, 200
+
     
     @jwt_required()
     def delete(self, question_id):

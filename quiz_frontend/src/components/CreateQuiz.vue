@@ -34,12 +34,6 @@
                                 <label for="duration">Duration (minutes)</label>
                                 <input type="number" class="form-control" v-model="duration_minutes" required />
                             </div>
-
-                            <div class="form-group mb-3">
-                                <label for="remarks">Remarks</label>
-                                <textarea class="form-control" v-model="remarks"></textarea>
-                            </div>
-
                             <div class="form-group mb-3">
                                 <label for="subject">Select Subject</label>
                                 <select v-model="subject_name" class="form-control" required>
@@ -78,7 +72,6 @@ export default {
             date_of_quiz: '',
             time_duration: '',
             duration_minutes: '',
-            remarks: '',
             chapter_id: '',
             subject_name: '',
             chapter_name: '',
@@ -134,7 +127,6 @@ export default {
                 date_of_quiz: this.date_of_quiz,
                 time_duration: this.time_duration + ":00",
                 duration_minutes: parseInt(this.duration_minutes),
-                remarks: this.remarks,
                 chapter_id: this.chapter_id,
                 subject_name: this.subject_name,
                 chapter_name: this.chapter_name,

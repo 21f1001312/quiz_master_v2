@@ -57,16 +57,16 @@ class SubjectByIdAPI(Resource):
         if not subject:
             return {'message': 'Subject not found.'}, 404
 
-        if 'name' in data:
+        if 'name' in data and data['name'].strip():
             name = data['name'].strip()
             if len(name) < 3 or len(name) > 80:
                 return {'message': 'Subject name must be between 4-80 characters.'}, 400
             subject.name = name
 
-        if 'description' in data:
+        if 'description' in data and data['description'].strip():
             subject.description = data['description'].strip()
 
-        if 'level' in data:
+        if 'level' in data and data['level'].strip():
             subject.level = data['level'].strip()
 
         db.session.commit()
