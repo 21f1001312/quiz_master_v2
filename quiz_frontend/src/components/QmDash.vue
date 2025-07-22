@@ -104,6 +104,33 @@
             </div>
         </div>
     </div>
+    <div class="container mt-5" v-if="quizFeedbacks.length > 0">
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">Student Feedback on Quizzes</div>
+        <div class="card-body">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Student Name</th>
+                <th>Quiz Title</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="feedback in quizFeedbacks" :key="feedback.attempt_id">
+                <td>{{ feedback.student_name }}</td>
+                <td>{{ feedback.quiz_title }}</td>
+                <td>{{ feedback.remarks }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </template>
 
 <script>
@@ -111,7 +138,8 @@ export default {
     data() {
         return {
             allStudents: [],
-            allQuizzes: []
+            allQuizzes: [],
+            quizFeedbacks: [] 
         };
     },
     methods: {
@@ -192,10 +220,55 @@ export default {
                     console.log(error);
                 });
         },
+        async fetchFeedbacks() {
+    try {
+      const response = await fetch('/api/quiz/0/feedback/view', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        this.quizFeedbacks = result.feedbacks;
+      } else {
+        console.error('Error fetching feedback');
+      }
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+    }
+  },
+  async exportData() {
+            try {
+                const response = await fetch('/api/export', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'quiz_data.json';
+                    link.click();
+                    URL.revokeObjectURL(url);
+                } else {
+                    alert('Error exporting data');
+                }
+            } catch (error) {
+                alert('Error exporting data');
+            }
+        },
     },
     mounted() {
         this.fetchQuizzes();
         this.fetchStudents();
+        this.fetchFeedbacks();
     }
 };
 

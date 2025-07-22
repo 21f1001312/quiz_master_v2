@@ -14,9 +14,9 @@ class User(db.Model):
     role = db.Column(db.String(50), nullable=False, default='student')
     status = db.Column(db.String(50), nullable=False, default='active') 
 
-    questionns = db.relationship('Question', backref='user', lazy=True, cascade="all, delete")
-    scores = db.relationship('Score', backref='user', lazy=True, cascade="all, delete")
-
+    questions = db.relationship('Question', backref='user', lazy=True, cascade="all, delete")
+    quiz_attempts = db.relationship('QuizAttempt', backref='user', lazy=True, cascade="all, delete")
+   
     def convert_to_json(self):
         return {
             'id': self.id,
@@ -75,32 +75,30 @@ class Quiz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
     date_of_quiz = db.Column(db.Date, nullable=False)
-    time_duration = db.Column(db.Time, nullable=True)
-    duration_minutes = db.Column(db.Integer, default=10)
+    time_duration = db.Column(db.Integer, nullable=True)
 
-    remarks = db.Column(db.Text)
     status = db.Column(db.String(20), default='scheduled')
 
-    start_time = db.Column(db.DateTime)
-    end_time = db.Column(db.DateTime)
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
 
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'), nullable=False)
     chapter_id = db.Column(db.Integer, db.ForeignKey('chapters.id'), nullable=False)
     master_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     questions = db.relationship('Question', backref='quiz', lazy=True, cascade="all, delete")
-    scores = db.relationship('Score', backref='quiz', lazy=True, cascade="all, delete")
+    quiz_attempts = db.relationship('QuizAttempt', backref='quiz', lazy=True, cascade="all, delete")
+    quiz_attempt_answers = db.relationship('QuizAttemptAnswer', backref='quiz', lazy=True, cascade="all, delete")
 
     def convert_to_json(self):
         return {
             "id": self.id,
             "title": self.title,
             "date_of_quiz": self.date_of_quiz.strftime('%Y-%m-%d') if self.date_of_quiz else None,
-            "duration_minutes": self.duration_minutes,
-            "remarks": self.remarks,
+            "time_duration": self.time_duration,
             "status": self.status,
-            "start_time": self.start_time.strftime('%Y-%m-%d %H:%M') if self.start_time else None,
-            "end_time": self.end_time.strftime('%Y-%m-%d %H:%M') if self.end_time else None,
+            "start_time": self.start_time.strftime('%H:%M') if self.start_time else None,
+            "end_time": self.end_time.strftime('%H:%M') if self.end_time else None,
             "subject_name": self.subject.name,
             "chapter_name": self.chapter.name
         }
@@ -133,21 +131,47 @@ class Question(db.Model):
             "master_id": self.master_id
         }
 
-class Score(db.Model):
-    __tablename__ = 'scores'
+class QuizAttempt(db.Model):
+    __tablename__ = 'quiz_attempts'
 
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     quiz_id = db.Column(db.Integer, db.ForeignKey('quizzes.id'), nullable=False)
-
+    submitted = db.Column(db.Boolean, default=False)
     total_scored = db.Column(db.Integer)
-    time_stamp_of_attempt = db.Column(db.DateTime, default=datetime.utcnow)
+    remarks = db.Column(db.String(500))
+
+    quiz_attempt_answers = db.relationship('QuizAttemptAnswer', backref='quiz_attempt', lazy=True, cascade="all, delete")
 
     def convert_to_json(self):
         return {
             "id": self.id,
             "student_id": self.student_id,
             "quiz_id": self.quiz_id,
+            "start_time": self.quiz.start_time.strftime('%Y-%m-%d %H:%M:%S') if self.quiz and self.quiz.start_time else None,
+            "end_time": self.quiz.end_time.strftime('%Y-%m-%d %H:%M:%S') if self.quiz and self.quiz.end_time else None,
+            "submitted": self.submitted,
             "total_scored": self.total_scored,
-            "time_stamp_of_attempt": self.time_stamp_of_attempt.strftime('%Y-%m-%d %H:%M:%S') if self.time_stamp_of_attempt else None
+            "remarks": self.remarks,
         }
+
+class QuizAttemptAnswer(db.Model):
+    __tablename__ = 'quiz_attempt_answers'
+
+    id = db.Column(db.Integer, primary_key=True)
+    attempt_id = db.Column(db.Integer, db.ForeignKey('quiz_attempts.id'), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
+    selected_option = db.Column(db.String(1), nullable=False)  # 'a', 'b', 'c', or 'd'
+    is_correct = db.Column(db.Boolean, default=False)
+
+    quiz_id = db.Column(db.Integer, db.ForeignKey('quizzes.id'), nullable=False)
+    
+    def convert_to_json(self):
+        return {
+            'id': self.id,
+            'question_id': self.question_id,
+            'selected_option': self.selected_option,
+            'is_correct': self.is_correct,
+            'quiz_id': self.quiz_id
+        }
+

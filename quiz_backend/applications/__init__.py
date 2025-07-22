@@ -3,6 +3,7 @@ from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
+from flask_caching import Cache
 from flask_cors import CORS
 import os
 from datetime import date
@@ -11,8 +12,10 @@ from applications.config import Config
 
 app = Flask(__name__)
 app.config.from_object(Config)
+cache = Cache()
 
 db = SQLAlchemy(app)
+cache.init_app(app)
 api = Api(app)
 jwt = JWTManager(app)
 CORS(app)
@@ -23,9 +26,10 @@ from applications.models import User
 from applications.authenticate_api import SignupAPI, AuthAPI, StudentAPI
 from applications.subject_api import SubjectAPI, SubjectByIdAPI
 from applications.chapter_api import ChapterAPI, ChapterByIdAPI
-from applications.quiz_api import QuizAPI, QuizByIdAPI, QuizFeedbackAPI
+from applications.quiz_api import QuizAPI, QuizByIdAPI, QuizFeedbackAPI,QuizFeedbackViewAPI
+from applications.quiz_api import QuizScoreAPI, StartQuizAPI, SubmitQuizFeedbackAPI, SubmitQuizAPI, QuizExportEmailAPI
 from applications.question_api import QuestionAPI, QuestionByIdAPI
-from applications.start_quiz_api import StartQuizAPI
+from applications.quiz_task_api import QuizExportDownloadAPI
 
 
 with app.app_context():
@@ -63,4 +67,13 @@ api.add_resource(QuizByIdAPI, '/api/quiz/<int:quiz_id>')
 api.add_resource(QuizFeedbackAPI, '/api/quiz/<int:quiz_id>/feedback')
 api.add_resource(QuestionAPI, '/api/question')
 api.add_resource(QuestionByIdAPI, '/api/question/<int:question_id>')
+api.add_resource(QuizScoreAPI, '/api/quiz/<int:quiz_id>/score')
 api.add_resource(StartQuizAPI, '/api/quiz/<int:quiz_id>/start')
+api.add_resource(SubmitQuizAPI, '/api/quiz/<int:quiz_id>/submit/get', '/api/quiz/<int:quiz_id>/submit/post')
+api.add_resource(SubmitQuizFeedbackAPI, '/api/quiz/<int:quiz_id>/feedback/submit')
+api.add_resource(QuizFeedbackViewAPI, '/api/quiz/<int:quiz_id>/feedback/view')
+api.add_resource(QuizExportDownloadAPI, '/api/quiz/export')
+api.add_resource(QuizExportEmailAPI, '/api/quiz/export/email')
+
+
+

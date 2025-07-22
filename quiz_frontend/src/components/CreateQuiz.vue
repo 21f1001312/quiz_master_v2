@@ -25,14 +25,15 @@
                             </div>
 
                             <div class="form-group mb-3">
-                                <label for="time_duration">Quiz Start Time</label>
-                                <input type="time" class="form-control" v-model="time_duration" required />
+                                <label for="startTime">Quiz Start Time</label>
+                                <input type="time" class="form-control" v-model="start_time" required />
+
                             </div>
 
 
                             <div class="form-group mb-3">
                                 <label for="duration">Duration (minutes)</label>
-                                <input type="number" class="form-control" v-model="duration_minutes" required />
+                                <input type="number" class="form-control" v-model="time_duration" required />
                             </div>
                             <div class="form-group mb-3">
                                 <label for="subject">Select Subject</label>
@@ -70,8 +71,8 @@ export default {
         return {
             title: '',
             date_of_quiz: '',
+            start_time: '',
             time_duration: '',
-            duration_minutes: '',
             chapter_id: '',
             subject_name: '',
             chapter_name: '',
@@ -99,8 +100,8 @@ export default {
             } catch (error) {
                 console.error('Error fetching subjects:', error);
                 alert('Error fetching subjects');
-            }       
-        }, 
+            }
+        },
 
         async fetchChapters() {
             try {
@@ -124,9 +125,9 @@ export default {
         async createQuiz() {
             const payload = {
                 title: this.title,
-                date_of_quiz: this.date_of_quiz,
-                time_duration: this.time_duration + ":00",
-                duration_minutes: parseInt(this.duration_minutes),
+                date_of_quiz: this.date_of_quiz,      
+                start_time: this.start_time,          
+                time_duration: parseInt(this.time_duration),  
                 chapter_id: this.chapter_id,
                 subject_name: this.subject_name,
                 chapter_name: this.chapter_name,
@@ -153,8 +154,10 @@ export default {
                 }
             } catch (error) {
                 console.log(error);
+                this.errorMessage = "An unexpected error occurred.";
             }
-        },
+        }
+        ,
         logout() {
             this.$router.push('/login');
         },
