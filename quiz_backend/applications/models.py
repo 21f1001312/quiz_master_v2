@@ -100,7 +100,18 @@ class Quiz(db.Model):
             "start_time": self.start_time.strftime('%H:%M') if self.start_time else None,
             "end_time": self.end_time.strftime('%H:%M') if self.end_time else None,
             "subject_name": self.subject.name,
-            "chapter_name": self.chapter.name
+            "chapter_name": self.chapter.name,
+            "questions": [
+            {
+                "id": q.id,
+                "question_statement": q.question_statement,
+                "option1": q.option1,
+                "option2": q.option2,
+                "option3": q.option3,
+                "option4": q.option4
+            }
+            for q in self.questions
+        ]
         }
 
 class Question(db.Model):

@@ -19,12 +19,10 @@ class QuizAPI(Resource):
     @jwt_required()
     def get(self):
         chapter_id = request.args.get('chapter_id', type=int)
-
-        query = Quiz.query.options(joinedload(Quiz.questions))  # eager load questions
-
+        student_id = get_jwt_identity()
+        query = Quiz.query.options(joinedload(Quiz.questions))
         if chapter_id is not None:
             query = query.filter_by(chapter_id=chapter_id)
-
         quizzes = query.all()
         if not quizzes:
             return {'message': 'No quizzes found.'}, 404
@@ -33,14 +31,16 @@ class QuizAPI(Resource):
             'quizzes': [
                 {
                     **quiz.convert_to_json(),
-                    'questions': [
-                        {
-                            'id': q.id,
-                            'text': q.question_statement,
-                            'options': [q.option1, q.option2, q.option3, q.option4]
-                        }
-                        for q in quiz.questions
-                    ]
+                    'scores': (
+                        QuizAttempt.query.filter_by(student_id=student_id, quiz_id=quiz.id, submitted=True)
+                        .first().total_scored
+                        if QuizAttempt.query.filter_by(student_id=student_id, quiz_id=quiz.id, submitted=True).first()
+                        else None
+                    ),
+                    'submitted': bool(
+                        QuizAttempt.query.filter_by(student_id=student_id, quiz_id=quiz.id, submitted=True).first()
+                    ),
+                    
                 }
                 for quiz in quizzes
             ]
@@ -118,7 +118,6 @@ class QuizByIdAPI(Resource):
 
         data = request.get_json()
 
-        # Field updates with validation
         if 'title' in data and data['title'].strip():
             quiz.title = data['title'].strip()
 
@@ -260,187 +259,57 @@ class SubmitQuizAPI(Resource):
             'score_percentage': round((score / len(answers)) * 100, 2) if answers else 0,
             'answers': response
         }, 200
+    
 class QuizFeedbackAPI(Resource):
     @jwt_required()
     def post(self, quiz_id):
         user_id = get_current_user()
         user_role = get_user_role()
-        
         if user_role != 'student':
             return {'message': 'Only students can submit feedback.'}, 403
-
         attempt = QuizAttempt.query.filter_by(student_id=user_id, quiz_id=quiz_id).first()
-
         if not attempt:
             return {'message': 'Quiz attempt not found.'}, 404
-
-        # Prevent multiple feedback submissions
         if attempt.remarks:
             return {'message': 'Feedback already submitted.'}, 400
-
         data = request.get_json()
         remarks = data.get('remarks')
-
         if not remarks:
             return {'message': 'Remarks field is required.'}, 400
-
         attempt.remarks = remarks
         db.session.commit()
-
         return {'message': 'Feedback submitted successfully.'}, 200
-    
+
 class QuizFeedbackViewAPI(Resource):
     @jwt_required()
     def get(self, quiz_id):
         user_id = get_current_user()
         user_role = get_user_role()
-
         if user_role != 'quiz_master':
             return {'message': 'Only quiz masters can view feedback.'}, 403
-
         if quiz_id == 0:
-            # Get all quizzes created by the quiz master
             quizzes = Quiz.query.filter_by(master_id=user_id).all()
             quiz_ids = [q.id for q in quizzes]
-
-            # Get all attempts with remarks for these quizzes
             attempts = QuizAttempt.query.filter(
                 QuizAttempt.quiz_id.in_(quiz_ids),
                 QuizAttempt.remarks != None
-            ).options(joinedload(QuizAttempt.student)).all()
+            ).all()
         else:
             quiz = Quiz.query.filter_by(id=quiz_id, master_id=user_id).first()
             if not quiz:
                 return {'message': 'Quiz not found or not authorized.'}, 404
-
             attempts = QuizAttempt.query.filter_by(quiz_id=quiz_id).filter(
                 QuizAttempt.remarks != None
-            ).options(joinedload(QuizAttempt.student)).all()
-
+            ).all()
         feedback_list = [
             {
                 'student_id': attempt.student_id,
-                'student_name': attempt.student.full_name if attempt.student else '',
                 'remarks': attempt.remarks
             }
             for attempt in attempts
         ]
-
         return {'feedback': feedback_list}, 200
     
-
-    
-class SubmitQuizFeedbackAPI(Resource):
-    @jwt_required()
-    def patch(self, quiz_id):
-        user_id = get_current_user()
-        user_role = get_user_role()
-
-        if user_role != 'student':
-            return {'message': 'Only students can submit feedback.'}, 403
-
-        data = request.get_json()
-        remarks = data.get('remarks', '').strip()
-
-        if not remarks:
-            return {'message': 'Remarks cannot be empty.'}, 400
-
-        # Get the student's quiz attempt
-        attempt = QuizAttempt.query.filter_by(quiz_id=quiz_id, student_id=user_id).first()
-        if not attempt:
-            return {'message': 'Quiz attempt not found.'}, 404
-
-        if not attempt.submitted:
-            return {'message': 'Cannot give feedback before submitting the quiz.'}, 400
-
-        # Fetch all submitted answers for the attempt
-        submitted_answers = QuizAttemptAnswer.query.filter_by(attempt_id=attempt.id).all()
-
-        # Recalculate the total score by comparing with correct answers
-        total_score = 0
-        for ans in submitted_answers:
-            question = Question.query.get(ans.question_id)
-            if question and ans.selected_option == question.correct_option:
-                ans.is_correct = True
-                total_score += 1
-            else:
-                ans.is_correct = False
-
-        attempt.total_scored = total_score
-        attempt.remarks = remarks
-        db.session.commit()
-
-        return {
-            'message': 'Feedback and score updated successfully.',
-            'score': total_score
-        }, 200
-
-    
-class QuizScoreAPI(Resource):
-    @jwt_required()
-    def get(self, quiz_id):
-        user_id = get_jwt_identity()
-        current_user = get_jwt()
-
-        if current_user.get('role') != 'student':
-            return {'message': 'Only students can view their scores.'}, 403
-
-        attempt = QuizAttempt.query.filter_by(student_id=user_id, quiz_id=quiz_id).first()
-        if not attempt:
-            return {'message': 'You have not started this quiz.'}, 404
-
-        return {
-            'quiz_id': quiz_id,
-            'student_id': user_id,
-            'start_time': attempt.quiz.start_time.strftime('%Y-%m-%d %H:%M:%S') if attempt.quiz.start_time else None,
-            'end_time': attempt.quiz.end_time.strftime('%Y-%m-%d %H:%M:%S') if attempt.quiz.end_time else None,
-            'submitted': attempt.submitted,
-            'total_scored': attempt.total_scored,
-            'score_recorded': attempt.total_scored is not None
-        }, 200
-
-    @jwt_required()
-    def post(self, quiz_id):
-        user_id = get_jwt_identity()
-        current_user = get_jwt()
-
-        if current_user.get('role') != 'student':
-            return {'message': 'Only students can submit scores.'}, 403
-
-        attempt = QuizAttempt.query.filter_by(student_id=user_id, quiz_id=quiz_id).first()
-        if not attempt:
-            return {'message': 'You must start the quiz before submitting answers.'}, 400
-
-        if attempt.submitted:
-            return {'message': 'You have already submitted this quiz.'}, 400
-
-        now = datetime.now()
-        quiz = attempt.quiz
-        current_time = now.time()
-        if now.date() != quiz.date_of_quiz or current_time > quiz.end_time:
-            return {'message': 'Quiz submission time is over.'}, 403
-
-        data = request.get_json()
-        submitted_answers = data.get('answers')
-        if not submitted_answers:
-            return {'message': 'No answers submitted.'}, 400
-
-        total_score = 0
-        for question_id, student_answer in submitted_answers.items():
-            question = Question.query.get(question_id)
-            if question and question.correct_option == student_answer:
-                total_score += 1
-
-        attempt.total_scored = total_score
-        attempt.submitted = True
-        # If you want to store the time of submission, add `submitted_at = db.Column(db.DateTime)` to QuizAttempt
-
-        db.session.commit()
-
-        return {
-            'message': 'Quiz score recorded successfully.',
-            'total_scored': total_score
-        }, 201
 
 class QuizExportEmailAPI(Resource):
     @jwt_required()
@@ -462,8 +331,6 @@ class QuizExportEmailAPI(Resource):
                     "Score": a.total_scored or 0,
                     "Status": "Submitted" if a.submitted else "Not Submitted"
                 })
-
-        # ✅ Trigger async export via Celery
         data_export.delay(data=data, email=student.username)
 
         return {"message": "Export initiated. You’ll receive it via email shortly."}, 202
