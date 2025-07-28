@@ -6,7 +6,7 @@
 
             <div class="position-relative" style="width: 300px;">
                 <input v-model="globalSearch" class="form-control me-2" type="search"
-                    placeholder="Search student, quiz or subject" @input="fetchSearchResults" />
+                    placeholder="Search student" @input="fetchSearchResults" />
             </div>
 
             <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse"
@@ -19,7 +19,7 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <router-link to="/manager" class="nav-link active" aria-current="page">Home</router-link>
+                    <router-link to="/quizmaster" class="nav-link active" aria-current="page">Home</router-link>
                 </li>
                 <li class="nav-item">
                     <router-link to="/subject" class="nav-link">Subject</router-link>

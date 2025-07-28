@@ -3,16 +3,15 @@ from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
-from flask_caching import Cache
 from flask_cors import CORS
 import os
 from datetime import date
 
 from applications.config import Config
+from applications.cache import cache
 
 app = Flask(__name__)
 app.config.from_object(Config)
-cache = Cache()
 
 db = SQLAlchemy(app)
 cache.init_app(app)

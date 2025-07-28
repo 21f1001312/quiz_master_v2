@@ -9,7 +9,7 @@
         </button>
         <div class="position-relative" style="width: 300px;">
                 <input v-model="globalSearch" class="form-control me-2" type="search"
-                    placeholder="Search quiz or subject" @input="fetchSearchResults" />
+                    placeholder="Search subject" @input="fetchSearchResults" />
             </div>
         <button class="btn btn-outline-light ms-auto" @click="logout">Logout</button>
       </div>

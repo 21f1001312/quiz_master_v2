@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy.orm import joinedload
 from applications.quiz_task_api import schedule_quiz_submission  
 from applications.quiz_task_api import data_export
+from applications.cache import cache
 
 
 def get_current_user():
@@ -264,6 +265,7 @@ class SubmitQuizAPI(Resource):
 
 class QuizExportEmailAPI(Resource):
     @jwt_required()
+    @cache.cached(timeout=60)
     def post(self):
         student_id = get_jwt_identity()
         student = User.query.get(student_id)

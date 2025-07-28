@@ -2,9 +2,11 @@ from flask import request
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt
 from applications.models import db, Subject
+from applications.cache import cache
 
 class SubjectAPI(Resource):
     @jwt_required()
+    @cache.cached(timeout=60)
     def get(self):
         subjects = Subject.query.all()
         data = [sub.convert_to_json() for sub in subjects]
