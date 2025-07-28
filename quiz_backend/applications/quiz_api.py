@@ -170,9 +170,10 @@ class StartQuizAPI(Resource):
         else:
             attempt = existing_attempt
 
-        # 🔔 Schedule Celery task to auto-submit
+        # Schedule Celery task to auto-submit
         from datetime import timedelta
         delay = timedelta(minutes=quiz.time_duration)
+
         schedule_quiz_submission.apply_async(
             args=[attempt.id],
             countdown=delay.total_seconds()
@@ -259,56 +260,6 @@ class SubmitQuizAPI(Resource):
             'score_percentage': round((score / len(answers)) * 100, 2) if answers else 0,
             'answers': response
         }, 200
-    
-class QuizFeedbackAPI(Resource):
-    @jwt_required()
-    def post(self, quiz_id):
-        user_id = get_current_user()
-        user_role = get_user_role()
-        if user_role != 'student':
-            return {'message': 'Only students can submit feedback.'}, 403
-        attempt = QuizAttempt.query.filter_by(student_id=user_id, quiz_id=quiz_id).first()
-        if not attempt:
-            return {'message': 'Quiz attempt not found.'}, 404
-        if attempt.remarks:
-            return {'message': 'Feedback already submitted.'}, 400
-        data = request.get_json()
-        remarks = data.get('remarks')
-        if not remarks:
-            return {'message': 'Remarks field is required.'}, 400
-        attempt.remarks = remarks
-        db.session.commit()
-        return {'message': 'Feedback submitted successfully.'}, 200
-
-class QuizFeedbackViewAPI(Resource):
-    @jwt_required()
-    def get(self, quiz_id):
-        user_id = get_current_user()
-        user_role = get_user_role()
-        if user_role != 'quiz_master':
-            return {'message': 'Only quiz masters can view feedback.'}, 403
-        if quiz_id == 0:
-            quizzes = Quiz.query.filter_by(master_id=user_id).all()
-            quiz_ids = [q.id for q in quizzes]
-            attempts = QuizAttempt.query.filter(
-                QuizAttempt.quiz_id.in_(quiz_ids),
-                QuizAttempt.remarks != None
-            ).all()
-        else:
-            quiz = Quiz.query.filter_by(id=quiz_id, master_id=user_id).first()
-            if not quiz:
-                return {'message': 'Quiz not found or not authorized.'}, 404
-            attempts = QuizAttempt.query.filter_by(quiz_id=quiz_id).filter(
-                QuizAttempt.remarks != None
-            ).all()
-        feedback_list = [
-            {
-                'student_id': attempt.student_id,
-                'remarks': attempt.remarks
-            }
-            for attempt in attempts
-        ]
-        return {'feedback': feedback_list}, 200
     
 
 class QuizExportEmailAPI(Resource):

@@ -7,6 +7,10 @@
         <button @click="exportQuizHistory" class="btn btn-primary mb-3">
           Export Quiz History (CSV)
         </button>
+        <div class="position-relative" style="width: 300px;">
+                <input v-model="globalSearch" class="form-control me-2" type="search"
+                    placeholder="Search quiz or subject" @input="fetchSearchResults" />
+            </div>
         <button class="btn btn-outline-light ms-auto" @click="logout">Logout</button>
       </div>
     </nav>
@@ -36,8 +40,8 @@
                       <span v-if="quiz.submitted && quiz.scores !== undefined && quiz.scores !== null">
                         {{ quiz.scores }}
                       </span>
-                      </td>
-                      <td><span v-if="quiz.submitted && quiz.scores !== undefined && quiz.scores !== null">
+                    </td>
+                    <td><span v-if="quiz.submitted && quiz.scores !== undefined && quiz.scores !== null">
                         {{ quiz.scores }}
                       </span>
                       <span v-else>
@@ -65,6 +69,8 @@ export default {
   data() {
     return {
       allQuizzes: [],
+      globalSearch: '',
+      searchResults: [],
     };
   },
   methods: {
@@ -79,34 +85,6 @@ export default {
         return;
       }
 
-      fetch('/api/quiz/export', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Failed to export quiz history.');
-          }
-          return response.blob();
-        })
-        .then(blob => {
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'quiz_history.csv';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-        })
-        .catch(error => {
-          console.error('Export error:', error);
-          alert('Failed to export quiz history. Please try again later.');
-        });
-
-      // Calling celery task to send email
       fetch('/api/quiz/export/email', {
         method: 'POST',
         headers: {
@@ -114,12 +92,19 @@ export default {
           'Content-Type': 'application/json',
         },
       })
-        .then(response => response.json())
+        .then(response => {
+          if (response.status === 202 || response.status === 200) {
+            return response.json();
+          } else {
+            throw new Error('Unexpected response');
+          }
+        })
         .then(data => {
-          console.log(data);
+          alert(data.message || "Export started. You'll receive it via email shortly.");
         })
         .catch(error => {
           console.error('Email error:', error);
+          alert("Failed to export quiz history. Please try again later.");
         });
     },
     fetchQuizzes() {
@@ -151,10 +136,29 @@ export default {
           this.logout();
         });
     },
+    async fetchSearchResults() {
+            if (!this.globalSearch.trim()) {
+                this.searchResults = [];
+                return;
+            }
+
+            const token = localStorage.getItem("studentToken");
+            const response = await fetch(`/api/students/search?q=${this.globalSearch}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.searchResults = data.results;
+                console.log("Search Results:", data.results);
+            }
+        },
   },
   mounted() {
     this.fetchQuizzes();
+    this.fetchSearchResults();
   },
 };
 </script>
-

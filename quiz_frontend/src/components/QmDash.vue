@@ -3,6 +3,12 @@
     <nav class="navbar bg-primary" data-bs-theme="dark">
         <div class="container-fluid d-flex justify-content-between align-items-center">
             <a class="navbar-brand" href="#">Dashboard Mastereo</a>
+
+            <div class="position-relative" style="width: 300px;">
+                <input v-model="globalSearch" class="form-control me-2" type="search"
+                    placeholder="Search student, quiz or subject" @input="fetchSearchResults" />
+            </div>
+
             <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
                 aria-label="Toggle navigation">
@@ -105,32 +111,32 @@
         </div>
     </div>
     <div class="container mt-5" v-if="quizFeedbacks.length > 0">
-  <div class="row justify-content-center">
-    <div class="col-md-12">
-      <div class="card">
-        <div class="card-header">Student Feedback on Quizzes</div>
-        <div class="card-body">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Student Name</th>
-                <th>Quiz Title</th>
-                <th>Remarks</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="feedback in quizFeedbacks" :key="feedback.attempt_id">
-                <td>{{ feedback.student_name }}</td>
-                <td>{{ feedback.quiz_title }}</td>
-                <td>{{ feedback.remarks }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">Student Feedback on Quizzes</div>
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Quiz Title</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="feedback in quizFeedbacks" :key="feedback.attempt_id">
+                                    <td>{{ feedback.student_name }}</td>
+                                    <td>{{ feedback.quiz_title }}</td>
+                                    <td>{{ feedback.remarks }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
-</div>
 </template>
 
 <script>
@@ -139,7 +145,9 @@ export default {
         return {
             allStudents: [],
             allQuizzes: [],
-            quizFeedbacks: [] 
+            quizFeedbacks: [],
+            globalSearch: '',
+            searchResults: [],
         };
     },
     methods: {
@@ -220,27 +228,27 @@ export default {
                     console.log(error);
                 });
         },
-        async fetchFeedbacks() {
-    try {
-      const response = await fetch('/api/quiz/0/feedback/view', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-          'Content-Type': 'application/json',
-        },
-      });
+        async fetchSearchResults() {
+            if (!this.globalSearch.trim()) {
+                this.searchResults = [];
+                return;
+            }
 
-      if (response.ok) {
-        const result = await response.json();
-        this.quizFeedbacks = result.feedbacks;
-      } else {
-        console.error('Error fetching feedback');
-      }
-    } catch (error) {
-      console.error('Error fetching feedback:', error);
-    }
-  },
-  async exportData() {
+            const token = localStorage.getItem("adminToken");
+            const response = await fetch(`/api/master/search?q=${this.globalSearch}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.searchResults = data.results;
+                console.log("Search Results:", data.results);
+            }
+        },
+
+        async exportData() {
             try {
                 const response = await fetch('/api/export', {
                     method: 'GET',
@@ -268,7 +276,7 @@ export default {
     mounted() {
         this.fetchQuizzes();
         this.fetchStudents();
-        this.fetchFeedbacks();
+        this.fetchSearchResults();
     }
 };
 

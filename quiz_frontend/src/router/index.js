@@ -13,6 +13,7 @@ import EditQuestion from '@/components/EditQuestion.vue';
 import CreateQuiz from '@/components/CreateQuiz.vue';
 import EditQuiz from '@/components/EditQuiz.vue';
 import AttemptQuiz from '@/components/AttemptQuiz.vue';
+import SubmitQuiz from '@/components/AttemptQuiz.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -87,6 +88,12 @@ const router = createRouter({
       name: 'attempt-quiz',
       component: AttemptQuiz,
     },
+    {
+      path: '/submit-quiz/:id',
+      name: 'submit-quiz',
+      component: SubmitQuiz,
+    }
+
   ]
 });
 

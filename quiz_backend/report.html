@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Monthly Quiz Report</title>
+</head>
+<body>
+  <h2>Hello {{ student_name }},</h2>
+  <p>Here is your monthly quiz summary for {{ month_year }}.</p>
+  <table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Quiz Title</th>
+        <th>Date</th>
+        <th>Score</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in data %}
+      <tr>
+        <td>{{ row.quiz_title }}</td>
+        <td>{{ row.date }}</td>
+        <td>{{ row.score }}</td>
+        <td>{{ row.status }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p>Regards,<br/>Quiz Master Team</p>
+</body>
+</html>

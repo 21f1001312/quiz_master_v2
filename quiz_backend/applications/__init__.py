@@ -27,9 +27,9 @@ from applications.authenticate_api import SignupAPI, AuthAPI, StudentAPI
 from applications.subject_api import SubjectAPI, SubjectByIdAPI
 from applications.chapter_api import ChapterAPI, ChapterByIdAPI
 from applications.quiz_api import QuizAPI, QuizByIdAPI, StartQuizAPI,SubmitQuizAPI
-from applications.quiz_api import QuizFeedbackAPI, QuizFeedbackViewAPI, QuizExportEmailAPI
+from applications.quiz_api import QuizExportEmailAPI
 from applications.question_api import QuestionAPI, QuestionByIdAPI
-from applications.quiz_task_api import QuizExportDownloadAPI
+from applications.search_api import MastereoSearchAPI, StudentSearchAPI
 
 
 with app.app_context():
@@ -67,11 +67,10 @@ api.add_resource(QuizByIdAPI, '/api/quiz/<int:quiz_id>')
 api.add_resource(QuestionAPI, '/api/question')
 api.add_resource(QuestionByIdAPI, '/api/question/<int:question_id>')
 api.add_resource(StartQuizAPI, '/api/quiz/<int:quiz_id>/start')
-api.add_resource(QuizFeedbackAPI, '/api/quiz/<int:quiz_id>/feedback')
 api.add_resource(SubmitQuizAPI, '/api/quiz/<int:quiz_id>/submit/get', '/api/quiz/<int:quiz_id>/submit/post')
-api.add_resource(QuizFeedbackViewAPI, '/api/quiz/<int:quiz_id>/feedback/view')
-api.add_resource(QuizExportDownloadAPI, '/api/quiz/export')
 api.add_resource(QuizExportEmailAPI, '/api/quiz/export/email')
+api.add_resource(MastereoSearchAPI, '/api/master/search')
+api.add_resource(StudentSearchAPI, '/api/students/search')
 
 
 
