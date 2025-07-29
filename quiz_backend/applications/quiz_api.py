@@ -128,14 +128,11 @@ class QuizByIdAPI(Resource):
             except ValueError:
                 return {'message': 'Invalid date format. Use YYYY-MM-DD.'}, 400
 
+        if 'time_duration' in data:
+            quiz.time_duration = data['time_duration']
+            
         if 'start_time' in data:
-            try:
-                quiz.start_time = datetime.strptime(data['start_time'], '%H:%M').time()
-            except ValueError:
-                return {'message': 'Invalid time format. Use HH:MM.'}, 400
-
-        if 'duration_minutes' in data:
-            quiz.duration_minutes = data['duration_minutes']
+            quiz.start_time = datetime.strptime(data['start_time'], '%H:%M').time()
 
         db.session.commit()
         return {'message': 'Quiz updated successfully.', 'quiz': quiz.convert_to_json()}, 200

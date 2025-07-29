@@ -16,8 +16,8 @@ class AuthAPI(Resource):
         user = User.query.filter_by(username=data.get('username')).first()
         if user:
             if user.password == data.get('password'):
-                if user.role == 'manager' and user.status == 'pending':
-                    return {'message': 'Manager account is pending.'}, 403
+                if user.role == 'student' and user.status == 'pending':
+                    return {'message': 'Student account is pending.'}, 403
 
                 token = create_access_token(
                     identity=str(user.id),

@@ -96,7 +96,7 @@ export default{
                     this.errorMessage = result.message || 'Failed to create subject';
                 } else {
                     alert('Subject created successfully');
-                    this.$router.push('/quizmaster');
+                    this.$router.push('/subject');
                 }
             } catch (error) {
                 this.errorMessage = 'An error occurred while creating the subject';

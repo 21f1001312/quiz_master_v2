@@ -139,7 +139,7 @@ export default {
                     this.errorMessage = result.message || 'Failed to create chapter';
                 } else {
                     alert('Chapter created successfully');
-                    this.$router.push('/quizmaster');
+                    this.$router.push('/chapter');
                 }
             }
             catch (error) {
@@ -161,7 +161,7 @@ export default {
                     const result = await response.json();
                     alert(result.message);
                     this.fetchChapters();
-                    this.$router.push('/quizmaster');
+                    this.$router.push('/chapter');
                 } else {
                     alert("Error deleting chapter");
                 }

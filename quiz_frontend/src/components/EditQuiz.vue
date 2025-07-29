@@ -15,19 +15,19 @@
                         <form @submit.prevent="updateQuiz">
                             <div class="form-group mb-3">
                                 <label for="title">Quiz Title</label>
-                                <input type="text" class="form-control" v-model="quiz.title"/>
+                                <input type="text" class="form-control" v-model="quiz.title" />
                             </div>
                             <div class="form-group mb-3">
                                 <label for="date">Date of Quiz</label>
-                                <input type="date" class="form-control" v-model="quiz.date_of_quiz"/>
+                                <input type="date" class="form-control" v-model="quiz.date_of_quiz" />
                             </div>
                             <div class="form-group mb-3">
-                                <label for="time_duration">Quiz Start Time</label>
-                                <input type="time" class="form-control" v-model="quiz.time_duration"/>
+                                <label for="start_time">Quiz Start Time</label>
+                                <input type="time" class="form-control" v-model="quiz.start_time" />
                             </div>
                             <div class="form-group mb-3">
-                                <label for="duration">Duration (minutes)</label>
-                                <input type="number" class="form-control" v-model="quiz.duration_minutes"/>
+                                <label for="time_duration">Duration (minutes)</label>
+                                <input type="number" class="form-control" v-model.number="quiz.time_duration" />
                             </div>
                             <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
                             <button type="submit" class="btn btn-primary">Edit Quiz</button>
@@ -47,8 +47,8 @@ export default {
             quiz: {
                 title: '',
                 date_of_quiz: '',
-                time_duration: '',
-                duration_minutes: ''
+                start_time: '',
+                time_duration: ''
             }
         };
     },
@@ -61,8 +61,8 @@ export default {
             const payload = {
                 title: this.quiz.title,
                 date_of_quiz: this.quiz.date_of_quiz,
-                time_duration: this.quiz.time_duration,
-                duration_minutes: this.quiz.duration_minutes
+                start_time: this.quiz.start_time,
+                time_duration: this.quiz.time_duration
             };
             try {
                 const response = await fetch(`/api/quiz/${Quiz_id}`, {

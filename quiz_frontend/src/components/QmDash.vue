@@ -33,9 +33,6 @@
                 <li class="nav-item">
                     <router-link to="/create-quiz" class="nav-link">Create Quiz</router-link>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" aria-current="page" @click="exportData">Export CSV</a>
-                </li>
             </ul>
             <button class="btn btn-outline-light me-2" @click="logout">Logout</button>
         </div>
@@ -245,31 +242,6 @@ export default {
                 const data = await response.json();
                 this.searchResults = data.results;
                 console.log("Search Results:", data.results);
-            }
-        },
-
-        async exportData() {
-            try {
-                const response = await fetch('/api/export', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = 'quiz_data.json';
-                    link.click();
-                    URL.revokeObjectURL(url);
-                } else {
-                    alert('Error exporting data');
-                }
-            } catch (error) {
-                alert('Error exporting data');
             }
         },
     },
